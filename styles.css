@@ -1,1 +1,51 @@
-this is style file for project.
+import React, { useState, useEffect } from "react";
+import { createRoot } from "react-dom/client";
+
+const CurrencyExchanger = () => {
+    const [currencies, setCurrencies] = useState([]);
+    const [fromCurrency, setFromCurrency] = useState("USD");
+    const [toCurrency, setToCurrency] = useState("EUR");
+    const [amount, setAmount] = useState(1);
+    const [convertedAmount, setConvertedAmount] = useState(null);
+
+    useEffect(() => {
+        fetch("https://api.exchangerate-api.com/v4/latest/USD")
+            .then(response => response.json())
+            .then(data => setCurrencies(Object.keys(data.rates)));
+    }, []);
+
+    const convertCurrency = async () => {
+        const response = await fetch(`https://api.exchangerate-api.com/v4/latest/${fromCurrency}`);
+        const data = await response.json();
+        const rate = data.rates[toCurrency];
+        setConvertedAmount((amount * rate).toFixed(2));
+    };
+
+    return (
+        <div className="container">
+            <h2>Currency Exchanger</h2>
+            <input type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="Enter amount" />
+            
+            <select value={fromCurrency} onChange={e => setFromCurrency(e.target.value)}>
+                {currencies.map(currency => (
+                    <option key={currency} value={currency}>{currency}</option>
+                ))}
+            </select>
+
+            <select value={toCurrency} onChange={e => setToCurrency(e.target.value)}>
+                {currencies.map(currency => (
+                    <option key={currency} value={currency}>{currency}</option>
+                ))}
+            </select>
+
+            <button onClick={convertCurrency}>Convert</button>
+
+            {convertedAmount !== null && (
+                <p>{amount} {fromCurrency} = <strong>{convertedAmount} {toCurrency}</strong></p>
+            )}
+        </div>
+    );
+};
+
+const root = createRoot(document.getElementById("root"));
+root.render(<CurrencyExchanger />);
